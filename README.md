@@ -9,3 +9,5 @@ The living identity system and creation toolkit for Noviteq Solutions.
 - Approved primary and energy logo assets
 
 Run `npm run dev` for the local Brand Hub or `npm run build` for a production build.
+
+See [DEPLOYMENT.md](DEPLOYMENT.md) for package, hosting and feature-scope details.
