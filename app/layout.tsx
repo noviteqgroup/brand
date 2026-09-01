@@ -15,6 +15,11 @@ const geistMono = Geist_Mono({
 export const metadata: Metadata = {
   title: 'Noviteq Brand Hub',
   description: 'The complete identity system and brand creation toolkit for Noviteq Solutions.',
+  icons: {
+    icon: '/favicon.svg',
+    shortcut: '/favicon.svg',
+    apple: '/favicon.svg',
+  },
   openGraph: {
     title: 'Noviteq Brand Hub',
     description: 'Clarity, built in. The complete Noviteq identity system and creation toolkit.',
