@@ -123,5 +123,38 @@
     document.querySelectorAll('.customiser select').forEach(el=>el.addEventListener('change',refreshCode));
     refreshCode();
   </script>
+  <script>
+    // Multiple export formats are generated locally from the current approved preset.
+    const formatControl=document.createElement('div');
+    formatControl.className='control';
+    formatControl.innerHTML='<label>Export format<select id="exportFormat"><option value="html">Editable HTML</option><option value="print">Print-ready HTML (save as PDF)</option><option value="css">CSS design tokens</option><option value="json">JSON brand configuration</option><option value="svg">SVG asset preview</option></select></label>';
+    customiser.querySelector('.brand-lock').before(formatControl);
+    const exportButton=document.createElement('button');
+    exportButton.type='button';exportButton.id='openExport';exportButton.className='button';
+    exportButton.style.cssText='background:#07101d;color:#fff';
+    exportButton.textContent='View export ↗';
+    document.querySelector('.studio-foot').append(exportButton);
+    const xml=v=>String(v).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&apos;'}[c]));
+    function exportFile(){
+      const format=document.querySelector('#exportFormat').value,palette=document.querySelector('#palette').value,spacing=document.querySelector('#spacing').value,font=document.querySelector('#font').value,p=presets[palette];
+      const safeTitle=esc(active[4]),safeCopy=esc(copy.textContent),safeName=esc(name.value||'Your name'),safeRole=esc(role.value||'Your role');
+      const pad=spacing==='airy'?'42px':spacing==='tight'?'22px':'30px';
+      const base='noviteq-'+active[0]+'-'+palette+'-'+spacing;
+      const html='<!doctype html><html lang="en"><head><meta charset="utf-8"><title>'+safeTitle+' — Noviteq</title><style>:root{--noviteq-bg:'+p.bg+';--noviteq-accent:'+p.accent+';--noviteq-text:'+p.fg+'}body{margin:0;padding:'+pad+';font-family:'+fonts[font]+';background:var(--noviteq-bg);color:var(--noviteq-text)}.brand{color:'+p.tag+';font-weight:700;letter-spacing:.14em}h1{font-size:48px;line-height:.95}</style></head><body><header class="brand">NOVITEQ SOLUTIONS</header><main><h1>'+safeCopy+'</h1><p>'+safeName+' · '+safeRole+'</p></main></body></html>';
+      if(format==='html')return {name:base+'.html',type:'text/html',body:html};
+      if(format==='print')return {name:base+'-print.html',type:'text/html',body:html.replace('</style>','@media print{@page{margin:18mm}body{padding:0}}</style>')};
+      if(format==='css')return {name:base+'.css',type:'text/css',body:':root {\n  --noviteq-background: '+p.bg+';\n  --noviteq-accent: '+p.accent+';\n  --noviteq-highlight: '+p.tag+';\n  --noviteq-text: '+p.fg+';\n  --noviteq-font: '+fonts[font]+';\n  --noviteq-space: '+pad+';\n}\n'};
+      if(format==='json')return {name:base+'.json',type:'application/json',body:JSON.stringify({brand:'Noviteq Solutions',asset:active[4],preset:{palette,spacing,font,layout:document.querySelector('#layout').value},colour:{background:p.bg,accent:p.accent,highlight:p.tag,text:p.fg},content:{headline:copy.textContent,name:name.value,role:role.value}},null,2)};
+      const titleXml=xml(copy.textContent),nameXml=xml(name.value||'Your name'),roleXml=xml(role.value||'Your role');
+      return {name:base+'.svg',type:'image/svg+xml',body:'<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="630" viewBox="0 0 1200 630"><rect width="1200" height="630" fill="'+p.bg+'"/><circle cx="1030" cy="110" r="180" fill="none" stroke="'+p.accent+'" stroke-opacity=".22" stroke-width="42"/><text x="80" y="100" fill="'+p.tag+'" font-family="Arial,Helvetica,sans-serif" font-size="22" font-weight="700" letter-spacing="5">NOVITEQ SOLUTIONS</text><text x="80" y="270" fill="'+p.fg+'" font-family="Arial,Helvetica,sans-serif" font-size="76" font-weight="700">'+titleXml+'</text><text x="80" y="530" fill="'+p.fg+'" font-family="Arial,Helvetica,sans-serif" font-size="28">'+nameXml+' · '+roleXml+'</text></svg>'};
+    }
+    function useExport(open){
+      const file=exportFile(),url=URL.createObjectURL(new Blob([file.body],{type:file.type}));
+      if(open){window.open(url,'_blank','noopener');setTimeout(()=>URL.revokeObjectURL(url),30000);show('Export opened in a new tab')}
+      else{const a=document.createElement('a');a.href=url;a.download=file.name;a.click();setTimeout(()=>URL.revokeObjectURL(url),2000);show(file.name+' downloaded')}
+    }
+    document.querySelector('#download').onclick=()=>useExport(false);
+    exportButton.onclick=()=>useExport(true);
+  </script>
 </body>
 </html>
