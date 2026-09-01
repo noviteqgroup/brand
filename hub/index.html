@@ -156,5 +156,61 @@
     document.querySelector('#download').onclick=()=>useExport(false);
     exportButton.onclick=()=>useExport(true);
   </script>
+  <style>
+    .preview .byline{border-color:var(--studio-line,rgba(255,255,255,.13))}
+    .preview .byline small{color:var(--studio-muted,#b0bac7)}
+    .copy-type{margin-top:14px;padding:7px 10px;border:1px solid #cfd6df;border-radius:999px;background:#fff;color:#07101d;font-size:11px;font-weight:800}
+    .copy-type:hover{border-color:#1686f8;color:#087bee}
+    .palette-export{margin-top:28px;padding:22px;border:1px solid #d6dde6;border-radius:16px;background:#fff;display:flex;align-items:end;gap:14px;flex-wrap:wrap}
+    .palette-export strong{display:block;width:100%;font-size:16px}.palette-export p{margin:0 auto 0 0;color:#586270;font-size:13px}
+    .palette-export label{display:grid;gap:7px;font-size:12px;font-weight:800}.palette-export select{padding:10px;border:1px solid #cfd6df;border-radius:9px;background:#fff}
+    .palette-export button{padding:11px 14px;border:0;border-radius:999px;background:#07101d;color:#fff;font-weight:800}
+    @media(max-width:620px){.palette-export{align-items:stretch}.palette-export p{width:100%}.palette-export label,.palette-export button{width:100%}}
+  </style>
+  <script>
+    /* Approved additions to the live brand system. */
+    presets.inverse={bg:'#ffffff',fg:'#07090d',tag:'#087bee',accent:'#081b43',soft:'#081b4330',glow:'#081b4320'};
+    const inverseOption=document.createElement('option');
+    inverseOption.value='inverse';inverseOption.textContent='Inverse White + Carbon';
+    document.querySelector('#palette').append(inverseOption);
+    data.splice(1,0,['cobrand','⊕','Co-branding','Partner lockup and campaign kit','Co-branding lockup','Partner-ready · responsive','Trusted technology, together.']);
+    renderTools();
+
+    const studioPreview=document.querySelector('.preview');
+    const setInverseDetails=()=>{const inverse=document.querySelector('#palette').value==='inverse';studioPreview.style.setProperty('--studio-line',inverse?'#07101d22':'rgba(255,255,255,.13)');studioPreview.style.setProperty('--studio-muted',inverse?'#536070':'#b0bac7')};
+    document.querySelector('#palette').addEventListener('change',setInverseDetails);setInverseDetails();
+
+    document.querySelectorAll('.type-list>div').forEach(item=>{
+      const button=document.createElement('button');
+      button.type='button';button.className='copy-type';button.textContent='Copy style';
+      button.addEventListener('click',async()=>{
+        const spec=item.querySelector('small').innerText.replace(/\\s+/g,' ').trim();
+        const sample=item.querySelector('p').textContent.trim();
+        const text='Noviteq Geist Sans\\n'+spec+'\\n'+sample;
+        try{await navigator.clipboard.writeText(text);show('Typography rule copied')}catch{show('Copy this style: '+sample)}
+      });
+      item.append(button);
+    });
+
+    const paletteExport=document.createElement('section');
+    paletteExport.className='palette-export';
+    paletteExport.innerHTML='<div><strong>Palette &amp; schema files</strong><p>Export official colour tokens for web, design systems or visual-production workflows.</p></div><label>Format<select id="paletteSchemaFormat"><option value="css">CSS custom properties</option><option value="json">JSON design tokens</option><option value="svg">SVG swatch sheet</option></select></label><button type="button" id="viewPaletteSchema">View file ↗</button><button type="button" id="downloadPaletteSchema">Download palette ↓</button>';
+    document.querySelector('#swatches').after(paletteExport);
+    const tokenName=name=>'noviteq-'+name.toLowerCase().replace(/[^a-z0-9]+/g,'-').replace(/^-|-$/g,'');
+    function paletteFile(){
+      const format=document.querySelector('#paletteSchemaFormat').value;
+      if(format==='css')return {name:'noviteq-colour-tokens.css',type:'text/css',body:':root {\\n'+colours.map(c=>'  --'+tokenName(c[0])+': '+c[1]+';').join('\\n')+'\\n}\\n'};
+      if(format==='json')return {name:'noviteq-colour-tokens.json',type:'application/json',body:JSON.stringify({brand:'Noviteq Solutions',colour:Object.fromEntries(colours.map(c=>[tokenName(c[0]),{'$type':'color','$value':c[1]}]))},null,2)};
+      const swatches=colours.map((c,i)=>{const x=40+(i%2)*430,y=40+Math.floor(i/2)*150;return '<g><rect x="'+x+'" y="'+y+'" width="390" height="120" rx="16" fill="'+c[1]+'"/><text x="'+(x+20)+'" y="'+(y+48)+'" font-family="Arial" font-size="22" font-weight="700" fill="'+c[2]+'">'+c[0]+'</text><text x="'+(x+20)+'" y="'+(y+84)+'" font-family="Arial" font-size="18" fill="'+c[2]+'">'+c[1]+'</text></g>'}).join('');
+      return {name:'noviteq-colour-swatches.svg',type:'image/svg+xml',body:'<svg xmlns="http://www.w3.org/2000/svg" width="900" height="540" viewBox="0 0 900 540"><rect width="900" height="540" fill="#f3f5f7"/>'+swatches+'</svg>'};
+    }
+    function usePalette(open){const file=paletteFile(),url=URL.createObjectURL(new Blob([file.body],{type:file.type}));if(open){window.open(url,'_blank','noopener');setTimeout(()=>URL.revokeObjectURL(url),30000);show('Palette file opened')}else{const a=document.createElement('a');a.href=url;a.download=file.name;a.click();setTimeout(()=>URL.revokeObjectURL(url),2000);show(file.name+' downloaded')}}
+    document.querySelector('#viewPaletteSchema').onclick=()=>usePalette(true);
+    document.querySelector('#downloadPaletteSchema').onclick=()=>usePalette(false);
+
+    const footerShell=document.querySelector('.footer .shell');
+    const terms=document.createElement('a');terms.href='../terms.html';terms.textContent='Terms of use';
+    footerShell.insertBefore(terms,footerShell.lastElementChild);
+  </script>
 </body>
 </html>
